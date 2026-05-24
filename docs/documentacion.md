@@ -64,11 +64,11 @@ Se importan:
 ### Paso 2: Preparación de la consola
 
 ```python
-maximize_console(24)
+maximize_console(25)
 clear_console()
 ```
 
-1. **`maximize_console(24)`**: Maximiza la ventana de la consola de Windows y establece el tamaño de fuente en 24 puntos con tipografía "Consolas".
+1. **`maximize_console(25)`**: Maximiza la ventana de la consola de Windows y establece el tamaño de fuente en 25 puntos con tipografía "Consolas".
 2. **`clear_console()`**: Limpia la pantalla de la consola para presentar una interfaz limpia al usuario.
 
 ---
@@ -96,6 +96,7 @@ El programa queda en espera hasta que el usuario presione **ENTER**.
 ```python
 while True:
     clear_console()
+    maximize_console(21)
     try:
         menu = int(input('...Ingrese N° de opción: '))
     except ValueError:
@@ -105,7 +106,8 @@ while True:
 Se inicia un bucle infinito (`while True`) que:
 
 1. **Limpia la consola** al inicio de cada iteración.
-2. **Muestra el menú principal** con la descripción del proyecto y las opciones disponibles:
+2. **Ajusta el tamaño de fuente** a 21 puntos mediante `maximize_console(21)` para una mejor visualización del menú.
+3. **Muestra el menú principal** con la descripción del proyecto y las opciones disponibles:
    - `1` - Entrega Parcial 1 (Propuesta y definición)
    - `2` - Entrega Parcial 2 (Primer codificación)
    - `0` - Salir
@@ -227,7 +229,7 @@ def maximize_console(zoom=28):
    ```
    - Se crea una instancia de `CONSOLE_FONT_INFOEX`.
    - Se establece el tamaño de la estructura.
-   - Se define la altura de la fuente con el valor del parámetro `zoom` (por defecto 28, en `main.py` se usa 24).
+   - Se define la altura de la fuente con el valor del parámetro `zoom` (por defecto 28, en `main.py` se usa 25 para la intro y 21 para el menú).
    - Se establece "Consolas" como la tipografía.
 
 5. **Aplicación de la fuente:**
@@ -264,7 +266,14 @@ def evidencia_1():
 
 ---
 
-### `evidencia_2.py` - Cálculo Secuencial de Números Primos
+### `evidencia_2.py` - Cálculo Secuencial de Números Primos (Benchmark CPU-Bound)
+
+#### Estructura general
+
+Este módulo implementa un sub-menú propio con tres opciones:
+- `1` - Ejecutar prueba (cálculo secuencial de primos)
+- `2` - Ver informe (síntesis técnica de la evidencia)
+- `0` - Volver al menú principal
 
 #### Función auxiliar: `es_primo(n)`
 
@@ -276,56 +285,64 @@ def es_primo(n):
         return True
     if n % 2 == 0:
         return False
-    limite = math.isqrt(n) + 1
-    for i in range(3, limite, 2):
+    for i in range(3, n, 2):
         if n % i == 0:
             return False
     return True
 ```
 
-**Algoritmo de verificación de primalidad:**
+**Algoritmo de verificación de primalidad (sin optimización deliberada):**
 
 1. Si `n ≤ 1` → no es primo.
 2. Si `n == 2` → es primo (único primo par).
 3. Si `n` es par → no es primo.
-4. Se calcula el límite como `√n + 1` usando `math.isqrt()` (raíz cuadrada entera).
-5. Se itera desde 3 hasta el límite, de 2 en 2 (solo impares).
-6. Si algún divisor divide exactamente a `n` → no es primo.
-7. Si no se encontró ningún divisor → es primo.
+4. Se itera desde 3 hasta `n - 1`, de 2 en 2 (solo impares).
+5. Si algún divisor divide exactamente a `n` → no es primo.
+6. Si no se encontró ningún divisor → es primo.
+
+> **Nota didáctica:** Se ha removido deliberadamente la optimización de la raíz cuadrada (`math.isqrt(n)`) para forzar una carga de trabajo CPU-Bound masiva y controlada, con fines estrictamente experimentales. Esto permite saturar un núcleo lógico al 100% y obtener tiempos de ejecución más significativos para la comparación futura con versiones concurrentes.
 
 #### Función principal: `evidencia_2()`
 
 ```python
 def evidencia_2():
-    clear_console()
-    print('=== EJECUCIÓN PARCIAL 2: VERSIÓN SECUENCIAL ===\n')
-    limite_superior = 100000
-    print(f'Calculando números primos desde el 1 hasta el {limite_superior}...')
-    tiempo_inicio = time.time()
-    primos_encontrados = []
-    for numero in range(1, limite_superior, +1):
-        if es_primo(numero):
-            primos_encontrados.append(numero)
-    tiempo_fin = time.time()
-    tiempo_total = tiempo_fin - tiempo_inicio
-    input(f'\n¡Cálculo finalizado con éxito!\nCantidad de números primos encontrados: {len(primos_encontrados)}\nTiempo total de ejecución: {tiempo_total: .4f} segundos\n\n\nPresione ENTER para continuar ')
+    while True:
+        clear_console()
+        try:
+            menu = int(input('...Ingrese N° de opción: '))
+        except ValueError:
+            ...
+
+        if menu == 1:   # Ejecutar prueba
+            ...
+        elif menu == 2: # Ver informe
+            ...
+        elif menu == 0: # Volver
+            break
 ```
 
 **Flujo detallado:**
 
-1. **Limpia la consola** y muestra un encabezado.
-2. **Define el límite superior** en 100,000.
-3. **Informa al usuario** que el cálculo está en progreso.
-4. **Registra el tiempo de inicio** con `time.time()`.
-5. **Itera por cada número** del 1 al 99,999:
-   - Verifica si es primo con `es_primo()`.
-   - Si lo es, lo agrega a la lista `primos_encontrados`.
-6. **Registra el tiempo de fin**.
-7. **Calcula el tiempo total** de ejecución.
-8. **Muestra los resultados:**
-   - Cantidad de primos encontrados.
-   - Tiempo total de ejecución en segundos (con 4 decimales).
-9. **Espera** a que el usuario presione ENTER para volver al menú.
+1. **Sub-menú con bucle propio:** Se presenta un menú contextual que describe la propuesta elegida, el objetivo de esta fase y qué se espera comprobar.
+2. **Opción 1 - Ejecutar prueba:**
+   - Limpia la consola y muestra un encabezado.
+   - **Define el límite superior** en 150,000.
+   - **Muestra instrucciones de verificación en tiempo real** para que el usuario observe el comportamiento del proceso en el Administrador de Tareas (saturación de un único núcleo lógico).
+   - **Registra el tiempo de inicio** con `time.time()`.
+   - **Itera por cada número** del 1 al 150,000:
+     - Verifica si es primo con `es_primo()`.
+     - Si lo es, lo agrega a la lista `primos_encontrados`.
+   - **Registra el tiempo de fin**.
+   - **Calcula el tiempo total** de ejecución.
+   - **Muestra los resultados:** cantidad de primos encontrados y tiempo total en segundos (con 4 decimales).
+   - **Espera** a que el usuario presione ENTER para volver al sub-menú.
+3. **Opción 2 - Ver informe:**
+   - Muestra una síntesis del informe técnico que abarca:
+     - **Gestión y Control de Procesos:** Creación de proceso, estados Bloqueado y En Ejecución, rol del Scheduler.
+     - **Anillos de Privilegio:** Modo Usuario (Anillo 3) para el cómputo puro, Modo Kernel (Anillo 0) para syscalls (time.time, print, cls).
+     - **Comportamiento del Hardware:** Saturación de un único núcleo lógico, métrica de línea de base para futuras comparaciones.
+   - Espera ENTER para volver al sub-menú.
+4. **Opción 0 - Volver:** Limpia la consola y retorna al menú principal con `break`.
 
 ---
 
@@ -339,7 +356,7 @@ def evidencia_2():
               │
               ▼
 ┌─────────────────────────────┐
-│  maximize_console(24)       │
+│  maximize_console(25)       │
 │  clear_console()            │
 └─────────────┬───────────────┘
               │
@@ -352,6 +369,7 @@ def evidencia_2():
               ▼
 ┌─────────────────────────────┐
 │  Limpiar consola            │◄──────────────────┐
+│  maximize_console(21)       │                   │
 │  Mostrar menú principal     │                   │
 │  Leer opción del usuario    │                   │
 └─────────────┬───────────────┘                   │
@@ -388,7 +406,7 @@ def evidencia_2():
 | Elemento | Detalle |
 |----------|---------|
 | **Lenguaje** | Python 3 |
-| **Librerías estándar** | `os`, `ctypes`, `time`, `math` |
+| **Librerías estándar** | `os`, `ctypes`, `time` |
 | **Librerías externas** | Ninguna (no requiere `pip install`) |
 | **Sistema operativo** | Windows (la función `maximize_console` y `clear_console` usan comandos específicos de Windows) |
 
