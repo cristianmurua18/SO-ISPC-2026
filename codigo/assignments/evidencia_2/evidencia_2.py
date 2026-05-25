@@ -1,5 +1,5 @@
 import time
-from assignments.evidencia_2.funciones import es_primo, buscar_primos, buscar_primos_mp
+from assignments.evidencia_2.funciones import es_primo, buscar_primos, buscar_primos_thread, buscar_primos_mp
 from utils.clear_console import clear_console
 import threading
 import multiprocessing
@@ -21,7 +21,7 @@ def evidencia_2():
             )
             continue
 
-        if menu == 1:
+        if menu == 1: #--- SECUENCIAL --- 
             clear_console()
 
             limite_superior = 200000
@@ -36,11 +36,7 @@ def evidencia_2():
 
             tiempo_inicio = time.time()
 
-            primos_encontrados = []
-
-            for numero in range(1, limite_superior + 1):
-                if es_primo(numero):
-                    primos_encontrados.append(numero)
+            primos_encontrados = buscar_primos(1 , limite_superior)
 
             tiempo_fin = time.time()
 
@@ -50,7 +46,7 @@ def evidencia_2():
                 f'¡Cálculo finalizado con éxito!\nCantidad de números primos encontrados: {len(primos_encontrados)}\nTiempo total de ejecución: {tiempo_total: .4f} segundos\nPresione ENTER para continuar '
             )
 
-        elif menu == 2:
+        elif menu == 2: #--- MULTI HILOS ---
 
             clear_console()
 
@@ -64,30 +60,30 @@ def evidencia_2():
 
             print('=== VERSIÓN MULTIHILO ===\n\n')
 
-            tiempo_inicio = time.time()
+            tiempo_inicio = time.time()  
 
-            resultado = []
+            resultado = []       # Lista compartida entre threads
+            hilos = []   
 
-            hilos = []
-
-            rangos = [
-            (1, 50000),
-            (50000, 100000),
-            (100000, 150000),
-            (150000, 200000)
+            # División del problema en partes (paralelización manual)
+            rangos = [          
+            (1, 37500),
+            (37500, 75000),
+            (75000, 112500),
+            (112500, 150000)
             ]
 
-            for inicio, fin in rangos:
+             # Se crea un thread por cada rango
+            for inicio, fin in rangos:     
                 hilo = threading.Thread(
-                    target=buscar_primos,
+                    target=buscar_primos_thread,
                     args=(inicio, fin, resultado)
                 )
+                hilos.append(hilo)      # Guardamos referencia del thread
+                hilo.start()        # Ejecución del thread
 
-                hilos.append(hilo)
-
-                hilo.start()
-
-            for hilo in hilos:
+            # Esperamos a que todos los threads finalicen
+            for hilo in hilos:      
                 hilo.join()
 
             tiempo_fin = time.time()
@@ -98,11 +94,11 @@ def evidencia_2():
                 f'¡Cálculo finalizado con éxito!\nCantidad de números primos encontrados: {len(resultado)}\nTiempo total de ejecución: {tiempo_total: .4f} segundos\nPresione ENTER para continuar '
             )
         
-        elif menu == 3:
+        elif menu == 3: #--- MULTI PROCESOS ---
 
             clear_console()
 
-            limite_superior = 200000
+            limite_superior = 150000
 
             print('=== EJECUCIÓN EN PROCESO ===\n\n')
 
@@ -114,37 +110,46 @@ def evidencia_2():
 
             tiempo_inicio = time.time()
 
-            cola = multiprocessing.Queue()
+
+            manager = multiprocessing.Manager() # Manager crea un objeto que permite compartir datos entre procesos
+            cola = manager.Queue()    # Cola para comunicación entre procesos (IPC)
             procesos = []
 
+
             rangos = [
-            (1, 50000),
-            (50000, 100000),
-            (100000, 150000),
-            (150000, 200000)
+            (1, 37500),
+            (37500, 75000),
+            (75000, 112500),
+            (112500, 150000)
             ]
 
             for inicio, fin in rangos:
-
+                # Se crea un proceso independiente del sistema operativo
                 proceso = multiprocessing.Process(
                     target=buscar_primos_mp,
                     args=(inicio, fin, cola)
                 )
-
                 procesos.append(proceso)
+                proceso.start() # El sistema operativo asigna CPU a este proceso (Cada proceso tiene su propia memoria)
 
-                proceso.start()
-
-            for proceso in procesos:
+            print(f"Procesos creados: {len(procesos)}")
+                    
+            # Esperamos a que TODOS los procesos terminen
+            for proceso in procesos:    
                 proceso.join()
-
+            print("Procesos terminados, leyendo resultados...")   
+            
             resultado = []
 
-            while not cola.empty():
-                resultado.extend(cola.get())
+            for i in range(len(procesos)):
+                print(f"Recibiendo resultado {i+1}")
+                datos = cola.get()
+                resultado.extend(datos)
+
+          #  for _ in procesos:
+           #     resultado.extend(cola.get())
 
             tiempo_fin = time.time()
-
             tiempo_total = tiempo_fin - tiempo_inicio
 
             input(
