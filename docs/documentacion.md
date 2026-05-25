@@ -32,7 +32,8 @@ codigo/
 │   ├── evidencia_1/
 │   │   └── evidencia_1.py           # Propuesta y definición del proyecto
 │   └── evidencia_2/
-│       └── evidencia_2.py           # Cálculo secuencial de números primos
+│       ├── evidencia_2.py           # Menú y ejecución de pruebas (secuencial, multihilo, multiproceso)
+│       └── funciones.py             # Funciones de cálculo de primos (compartidas entre estrategias)
 └── utils/
     ├── clear_console.py             # Utilidad para limpiar la consola
     └── maximize_console.py          # Utilidad para maximizar y configurar la consola
@@ -57,7 +58,16 @@ Se importan:
 - `maximize_console`: función para maximizar la ventana de consola y ajustar la fuente.
 - `clear_console`: función para limpiar el contenido de la consola.
 - `evidencia_1`: función que muestra la propuesta del proyecto.
-- `evidencia_2`: función que ejecuta el cálculo secuencial de números primos.
+- `evidencia_2`: función que ejecuta el benchmark de cálculo de números primos (secuencial, multihilo y multiproceso).
+
+Todo el código ejecutable está encapsulado dentro de una función `main()` que se invoca mediante el guard:
+
+```python
+if __name__ == "__main__":
+    main()
+```
+
+> **Nota técnica:** Este guard es indispensable en Windows para el correcto funcionamiento de `multiprocessing`. Sin él, cada proceso hijo re-ejecutaría el script completo al ser creado mediante `spawn`, causando un bloqueo infinito.
 
 ---
 
@@ -266,16 +276,11 @@ def evidencia_1():
 
 ---
 
-### `evidencia_2.py` - Cálculo Secuencial de Números Primos (Benchmark CPU-Bound)
+### `funciones.py` - Módulo de Funciones de Cálculo
 
-#### Estructura general
+Este archivo centraliza toda la lógica de cálculo de números primos, separada del módulo de interfaz. Contiene 4 funciones:
 
-Este módulo implementa un sub-menú propio con tres opciones:
-- `1` - Ejecutar prueba (cálculo secuencial de primos)
-- `2` - Ver informe (síntesis técnica de la evidencia)
-- `0` - Volver al menú principal
-
-#### Función auxiliar: `es_primo(n)`
+#### `es_primo(n)` - Verificación de primalidad
 
 ```python
 def es_primo(n):
@@ -291,7 +296,7 @@ def es_primo(n):
     return True
 ```
 
-**Algoritmo de verificación de primalidad (sin optimización deliberada):**
+**Algoritmo (sin optimización deliberada):**
 
 1. Si `n ≤ 1` → no es primo.
 2. Si `n == 2` → es primo (único primo par).
@@ -300,7 +305,66 @@ def es_primo(n):
 5. Si algún divisor divide exactamente a `n` → no es primo.
 6. Si no se encontró ningún divisor → es primo.
 
-> **Nota didáctica:** Se ha removido deliberadamente la optimización de la raíz cuadrada (`math.isqrt(n)`) para forzar una carga de trabajo CPU-Bound masiva y controlada, con fines estrictamente experimentales. Esto permite saturar un núcleo lógico al 100% y obtener tiempos de ejecución más significativos para la comparación futura con versiones concurrentes.
+> **Nota didáctica:** Se ha removido deliberadamente la optimización de la raíz cuadrada (`math.isqrt(n)`) para forzar una carga de trabajo CPU-Bound masiva y controlada, con fines estrictamente experimentales.
+
+#### `buscar_primos(inicio, fin)` - Búsqueda secuencial
+
+```python
+def buscar_primos(inicio, fin):
+    primos_encontrados = []
+    for numero in range(inicio, fin + 1):
+        if es_primo(numero):
+            primos_encontrados.append(numero)
+    return primos_encontrados
+```
+
+Recorre el rango `[inicio, fin]` y retorna una lista con todos los primos encontrados. Es la función base utilizada tanto en la versión secuencial como internamente por las versiones concurrentes.
+
+#### `buscar_primos_thread(inicio, fin, resultado)` - Versión para hilos
+
+```python
+def buscar_primos_thread(inicio, fin, resultado):
+    primos = buscar_primos(inicio, fin)
+    resultado.extend(primos)
+```
+
+Wrapper para uso con `threading.Thread`. Recibe una **lista compartida** (`resultado`) y agrega directamente los primos encontrados. Los hilos comparten el mismo espacio de memoria del proceso padre, por lo que pueden escribir en la misma estructura de datos.
+
+#### `buscar_primos_mp(inicio, fin, cola)` - Versión para procesos
+
+```python
+def buscar_primos_mp(inicio, fin, cola):
+    try:
+        primos = buscar_primos(inicio, fin)
+        cola.put(primos)
+    except Exception as e:
+        print(f"ERROR en {inicio}-{fin}: {e}")
+```
+
+Wrapper para uso con `multiprocessing.Process`. Como cada proceso tiene su **propia memoria aislada**, no puede escribir en una lista compartida. En su lugar, usa una `Queue` (cola de comunicación entre procesos — IPC) para enviar los resultados al proceso principal.
+
+---
+
+### `evidencia_2.py` - Benchmark CPU-Bound: Secuencial, Multihilo y Multiproceso
+
+#### Estructura general
+
+Este módulo implementa un sub-menú propio con cinco opciones:
+- `1` - Ejecutar prueba secuencial (monohilo)
+- `2` - Ejecutar prueba multihilo (threading)
+- `3` - Ejecutar prueba multiproceso (multiprocessing)
+- `4` - Ver informe (síntesis técnica)
+- `0` - Volver al menú principal
+
+#### Importaciones
+
+```python
+import time
+from assignments.evidencia_2.funciones import es_primo, buscar_primos, buscar_primos_thread, buscar_primos_mp
+from utils.clear_console import clear_console
+import threading
+import multiprocessing
+```
 
 #### Función principal: `evidencia_2()`
 
@@ -313,9 +377,13 @@ def evidencia_2():
         except ValueError:
             ...
 
-        if menu == 1:   # Ejecutar prueba
+        if menu == 1:   # Secuencial
             ...
-        elif menu == 2: # Ver informe
+        elif menu == 2: # Multihilo
+            ...
+        elif menu == 3: # Multiproceso
+            ...
+        elif menu == 4: # Ver informe
             ...
         elif menu == 0: # Volver
             break
@@ -323,26 +391,44 @@ def evidencia_2():
 
 **Flujo detallado:**
 
-1. **Sub-menú con bucle propio:** Se presenta un menú contextual que describe la propuesta elegida, el objetivo de esta fase y qué se espera comprobar.
-2. **Opción 1 - Ejecutar prueba:**
-   - Limpia la consola y muestra un encabezado.
-   - **Define el límite superior** en 150,000.
-   - **Muestra instrucciones de verificación en tiempo real** para que el usuario observe el comportamiento del proceso en el Administrador de Tareas (saturación de un único núcleo lógico).
-   - **Registra el tiempo de inicio** con `time.time()`.
-   - **Itera por cada número** del 1 al 150,000:
-     - Verifica si es primo con `es_primo()`.
-     - Si lo es, lo agrega a la lista `primos_encontrados`.
-   - **Registra el tiempo de fin**.
-   - **Calcula el tiempo total** de ejecución.
-   - **Muestra los resultados:** cantidad de primos encontrados y tiempo total en segundos (con 4 decimales).
-   - **Espera** a que el usuario presione ENTER para volver al sub-menú.
-3. **Opción 2 - Ver informe:**
+1. **Sub-menú con bucle propio:** Se presenta un menú contextual que describe la propuesta elegida, los objetivos de la fase y qué se espera comprobar.
+
+2. **Opción 1 - Prueba secuencial (monohilo):**
+   - Limpia la consola y muestra encabezado `=== EJECUCIÓN MONOHILO EN PROCESO ===`.
+   - **Límite superior:** 150,000.
+   - Muestra guía de verificación en tiempo real (Administrador de Tareas).
+   - Ejecuta `buscar_primos(1, limite_superior)` de forma directa y secuencial.
+   - Registra y muestra el tiempo total de ejecución.
+   - Espera ENTER para volver al sub-menú.
+
+3. **Opción 2 - Prueba multihilo (threading):**
+   - Limpia la consola y muestra encabezado `=== EJECUCIÓN MULTIHILOS EN PROCESO ===`.
+   - **Límite superior:** 150,000.
+   - **División del trabajo en 4 rangos:** `(1, 37500)`, `(37500, 75000)`, `(75000, 112500)`, `(112500, 150000)`.
+   - Crea 4 instancias de `threading.Thread`, cada una ejecutando `buscar_primos_thread` con un rango y una lista compartida `resultado`.
+   - Inicia todos los hilos con `.start()` y espera su finalización con `.join()`.
+   - Registra y muestra el tiempo total de ejecución.
+   - Espera ENTER para volver al sub-menú.
+
+4. **Opción 3 - Prueba multiproceso (multiprocessing):**
+   - Limpia la consola y muestra encabezado `=== EJECUCIÓN EN VARIOS PROCESOS EN PROGRESO ===`.
+   - **Límite superior:** 150,000.
+   - Crea un `multiprocessing.Manager()` y una `Queue` para comunicación entre procesos (IPC).
+   - **División del trabajo en 4 rangos:** mismos que la versión multihilo.
+   - Crea 4 instancias de `multiprocessing.Process`, cada una ejecutando `buscar_primos_mp` con un rango y la cola.
+   - Inicia todos los procesos con `.start()` y espera su finalización con `.join()`.
+   - Recoge los resultados de la cola con `cola.get()`.
+   - Registra y muestra el tiempo total de ejecución.
+   - Espera ENTER para volver al sub-menú.
+
+5. **Opción 4 - Ver informe:**
    - Muestra una síntesis del informe técnico que abarca:
      - **Gestión y Control de Procesos:** Creación de proceso, estados Bloqueado y En Ejecución, rol del Scheduler.
-     - **Anillos de Privilegio:** Modo Usuario (Anillo 3) para el cómputo puro, Modo Kernel (Anillo 0) para syscalls (time.time, print, cls).
-     - **Comportamiento del Hardware:** Saturación de un único núcleo lógico, métrica de línea de base para futuras comparaciones.
+     - **Anillos de Privilegio:** Modo Usuario (Anillo 3) para el cómputo puro, Modo Kernel (Anillo 0) para syscalls.
+     - **Comportamiento del Hardware:** Saturación de núcleos lógicos, métrica de línea de base.
    - Espera ENTER para volver al sub-menú.
-4. **Opción 0 - Volver:** Limpia la consola y retorna al menú principal con `break`.
+
+6. **Opción 0 - Volver:** Limpia la consola y retorna al menú principal con `break`.
 
 ---
 
@@ -406,7 +492,7 @@ def evidencia_2():
 | Elemento | Detalle |
 |----------|---------|
 | **Lenguaje** | Python 3 |
-| **Librerías estándar** | `os`, `ctypes`, `time` |
+| **Librerías estándar** | `os`, `ctypes`, `time`, `threading`, `multiprocessing` |
 | **Librerías externas** | Ninguna (no requiere `pip install`) |
 | **Sistema operativo** | Windows (la función `maximize_console` y `clear_console` usan comandos específicos de Windows) |
 
@@ -414,12 +500,21 @@ def evidencia_2():
 
 ## Conceptos de Sistemas Operativos Aplicados
 
-El proyecto tiene como objetivo comparar distintas estrategias de ejecución concurrente. En esta entrega (Parcial 2) se implementa la **versión secuencial** como línea base para futuras comparaciones con:
+El proyecto compara tres estrategias de ejecución sobre la misma tarea CPU-intensiva (cálculo de primos hasta 150,000):
 
-- **Threading** (hilos): ejecución concurrente dentro de un mismo proceso, limitada por el GIL de Python.
-- **Multiprocessing** (procesos): ejecución paralela real en múltiples núcleos de CPU.
+| Estrategia | Módulo Python | Memoria | Paralelismo real | Limitación |
+|------------|---------------|---------|------------------|------------|
+| **Secuencial** | — | Un solo espacio | No | Un solo núcleo |
+| **Threading** | `threading` | Compartida (misma lista) | No (GIL) | Global Interpreter Lock |
+| **Multiprocessing** | `multiprocessing` | Aislada (IPC vía Queue) | Sí | Overhead de creación de procesos |
 
-La tarea elegida (cálculo de números primos) es **CPU-intensiva**, lo que la hace ideal para demostrar las diferencias entre estas estrategias.
+### Conceptos demostrados:
+
+- **Planificación de CPU:** El Scheduler del SO asigna tiempo de CPU a hilos y procesos. En la versión secuencial se satura un solo núcleo; en multiproceso se distribuye la carga.
+- **GIL (Global Interpreter Lock):** En la versión multihilo, a pesar de crear 4 threads, el GIL de CPython impide la ejecución paralela real de código Python, resultando en tiempos similares o peores que la versión secuencial.
+- **IPC (Inter-Process Communication):** La versión multiproceso usa `Manager().Queue()` para que los procesos hijos envíen resultados al proceso padre, ya que no comparten memoria.
+- **Guard `__main__`:** Indispensable en Windows porque `multiprocessing` usa `spawn` (re-importa el módulo). Sin el guard, los procesos hijos ejecutarían el script completo.
+- **Memoria compartida vs aislada:** Los threads escriben directamente en una lista compartida (`resultado.extend()`), mientras que los procesos envían datos mediante una cola (`cola.put()`).
 
 ---
 
