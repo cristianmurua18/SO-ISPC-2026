@@ -29,11 +29,15 @@ def evidencia_2():
             print('=== EJECUCIÓN EN PROCESO ===\n\n')
 
             print(
-                f'Calculando números primos desde el 1 hasta el {limite_superior}...\n\n\nPROCESAMIENTO EN CURSO, AGUARDE POR FAVOR...\n\n\nEl proceso activo se encuentra en estado de Ejecución (Running) bajo Modo Usuario.\n\nGuía de Verificación en Tiempo Real:\n\n1. Abra el Administrador de Tareas (Windows) o ejecute "htop" (Linux).\n\n2. En la pestaña de Procesos, localice la instancia activa de "python.exe" correspondiente a este script.\n\n3. Diríjase a la pestaña de Rendimiento -> CPU.\n\n4. Haga clic derecho sobre el gráfico de CPU y seleccione: "Cambiar gráfico a -> Procesadores lógicos"\n\n5. Observe cómo la carga de trabajo CPU-Bound es ejecutada por un único hilo principal de manera secuencial.\n\n6. Dependiendo del Scheduler del sistema operativo, el hilo puede migrar dinámicamente entre distintos núcleos lógicos,\npor lo que la actividad puede distribuirse visualmente entre varios procesadores.\n\n7. Aun así, el consumo total permanecerá limitado aproximadamente a la capacidad de ejecución de un único thread lógico,\nlo que evidencia la naturaleza secuencial y monohilo de esta implementación.'
+                f'Calculando números primos desde el 1 hasta el {limite_superior}...\n\n\nPROCESAMIENTO EN CURSO, AGUARDE POR FAVOR...\n\n\nEl proceso activo se encuentra en estado de Ejecución (Running) bajo Modo Usuario.\n\nGuía de Verificación en Tiempo Real:\n\n1. Abra el Administrador de Tareas (Windows) o ejecute "htop" (Linux).\n\n2. En la pestaña de Procesos, localice la instancia activa de "python.exe" correspondiente a este script.\n\n3. Diríjase a la pestaña de Rendimiento -> CPU.\n\n4. Haga clic derecho sobre el gráfico de CPU y seleccione: "Cambiar gráfico a -> Procesadores lógicos"\n\n5. Observe cómo la carga de trabajo CPU-Bound es ejecutada por un único hilo principal de manera secuencial.\n\n6. Dependiendo del Scheduler del sistema operativo, el hilo puede migrar dinámicamente entre distintos núcleos lógicos,\npor lo que la actividad puede distribuirse visualmente entre varios procesadores.\n\n7. Aun así, el consumo total permanecerá limitado aproximadamente a la capacidad de ejecución de un único thread lógico,\nlo que evidencia la naturaleza secuencial y monohilo de esta implementación.\n\n'
             )
 
             print('=== VERSIÓN SECUENCIAL ===\n\n')
 
+
+            print('Esperando resultados...')
+
+            
             tiempo_inicio = time.time()
 
             primos_encontrados = buscar_primos(1 , limite_superior)
