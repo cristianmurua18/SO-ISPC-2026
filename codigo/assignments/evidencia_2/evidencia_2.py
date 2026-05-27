@@ -1,5 +1,7 @@
 import time
 from assignments.evidencia_2.funciones import es_primo, buscar_primos, buscar_primos_thread, buscar_primos_mp
+from assignments.evidencia_2.mensajes import CALCULANDO_PRIMOS, ERROR_MENU, ESPERANDO_RESULTADOS, MENU_PRINCIPAL, get_mensaje_exito
+from assignments.evidencia_2.constantes import LIMITE_SUPERIOR, RANGOS
 from utils.clear_console import clear_console
 import threading
 import multiprocessing
@@ -9,72 +11,51 @@ def evidencia_2():
         clear_console()
 
         try:
-            menu = int(
-                input(
-                    'PROPUESTA ELEGIDA:\nANÁLISIS DE RENDIMIENTO DE APLICACIONES EN FUNCIÓN DEL SISTEMA OPERATIVO: THREADS VS PROCESOS\n\nObjetivos de esta Fase:\nUsar python y experimentar con una aplicacion al ejecutar tareas concurrentes mediante hilos y procesos.\n\n¿Qué se espera comprobar y realizar?\n\nCarga CPU-Bound: Forzar un estrés real y controlado en el procesador mediante un algoritmo exhaustivo de cálculo de números primos\n(Rango: 1 a 150.000), habiendo removido deliberadamente optimizaciones matemáticas con fines estrictamente didácticos.\n\nAislamiento de Recursos: Demostrar empíricamente cómo el Planificador del Sistema Operativo asigna esta tarea a un único hilo, o a varios\nsaturando un solo núcleo lógico al 100% de su capacidad mientras el resto de la arquitectura permanece en reposo o varios núcleos.\n\nTelemetría de Base: Registrar el tiempo exacto de procesamiento para utilizarlo como métrica de control\ncomparativa entre diferentes implementaciones, monohilo, concurrentes y paralelas.\n\n\nA continuación, elija una opción:\n\n1 - Ejecutar prueba secuencial\n\n2 - Ejecutar prueba multihilo\n\n3 - Ejecutar prueba multiproceso\n\n4 - Ver informe\n\n0 - Volver\n\n\n\nIngrese N° de opción: '
-                ))                                                                                                                                                                               
+            menu = int(input(MENU_PRINCIPAL))                                                                                                                                                                               
 
         except ValueError:
             clear_console()
-            input(
-                '¡ERROR!\n\nPor favor, ingrese un NÚMERO válido. Presione ENTER para continuar '
-            )
+            input(ERROR_MENU)
             continue
 
         if menu == 1: #--- MONOHILO --- 
             clear_console()
 
-            limite_superior = 150000
-
             print('=== EJECUCIÓN MONOHILO EN PROCESO ===\n\n')
 
-            print(
-                f'Calculando números primos desde el 1 hasta el {limite_superior}...\n\n\nPROCESAMIENTO EN CURSO, AGUARDE POR FAVOR...\n\n\nEl proceso activo se encuentra en estado de Ejecución (Running) bajo Modo Usuario.\n\nGuía de Verificación en Tiempo Real:\n\n1. Abra el Administrador de Tareas (Windows) o ejecute "htop" (Linux).\n\n2. En la pestaña de Procesos, localice la instancia activa de "python.exe" correspondiente a este script.\n\n3. Diríjase a la pestaña de Rendimiento -> CPU.\n\n4. Haga clic derecho sobre el gráfico de CPU y seleccione: "Cambiar gráfico a -> Procesadores lógicos"\n\n5. Observe cómo la carga de trabajo CPU-Bound es ejecutada por un único hilo principal de manera secuencial.\n\n6. Dependiendo del Scheduler del sistema operativo, el hilo puede migrar dinámicamente entre distintos núcleos lógicos,\npor lo que la actividad puede distribuirse visualmente entre varios procesadores.\n\n7. Aun así, el consumo total permanecerá limitado aproximadamente a la capacidad de ejecución de un único thread lógico,\nlo que evidencia la naturaleza secuencial y monohilo de esta implementación.\n\n'
-            )
+            print(CALCULANDO_PRIMOS)
 
-            print('Esperando resultados... Esto puede tardar varios segundos dependiendo de la capacidad de su CPU... Aguarde por favor...\n\n')
+            print(ESPERANDO_RESULTADOS)
 
             tiempo_inicio = time.time()
 
-            primos_encontrados = buscar_primos(1 , limite_superior)
+            primos_encontrados = buscar_primos(1 , LIMITE_SUPERIOR)
 
             tiempo_fin = time.time()
 
             tiempo_total = tiempo_fin - tiempo_inicio
 
-            input(
-                f'¡Cálculo finalizado con éxito!\nCantidad de números primos encontrados: {len(primos_encontrados)}\nTiempo total de ejecución: {tiempo_total: .4f} segundos\nPresione ENTER para continuar '
-            )
+            input(get_mensaje_exito(primos_encontrados, tiempo_total))
 
         elif menu == 2: #--- MULTI HILOS ---
 
             clear_console()
 
-            limite_superior = 150000
-
             print('=== EJECUCIÓN MULTIHILOS EN PROCESO ===\n\n')
 
             print(
-                f'Calculando números primos desde el 1 hasta el {limite_superior}...\n\n\nPROCESAMIENTO EN CURSO, AGUARDE POR FAVOR...\n\n\nEl proceso activo se encuentra en estado de Ejecución (Running) bajo Modo Usuario.\n\nGuía de Verificación en Tiempo Real:\n\n1. Abra el Administrador de Tareas (Windows) o ejecute "htop" (Linux).\n\n2. En la pestaña de Procesos, localice la instancia activa de "python.exe" correspondiente a este script.\n\n3. Diríjase a la pestaña de Rendimiento -> CPU.\n\n4. Haga clic derecho sobre el gráfico de CPU y seleccione: "Cambiar gráfico a -> Procesadores lógicos"\n\n5. Observe cómo la carga de trabajo CPU-Bound es ejecutada por un único hilo principal de manera secuencial.\n\n6. Dependiendo del Scheduler del sistema operativo, el hilo puede migrar dinámicamente entre distintos núcleos lógicos,\npor lo que la actividad puede distribuirse visualmente entre varios procesadores.\n\n7. Aun así, el consumo total permanecerá limitado aproximadamente a la capacidad de ejecución de un único thread lógico,\nlo que evidencia la naturaleza secuencial y monohilo de esta implementación.\n\n'
+                f'Calculando números primos desde el 1 hasta el {LIMITE_SUPERIOR}...\n\n\nPROCESAMIENTO EN CURSO, AGUARDE POR FAVOR...\n\n\nEl proceso activo se encuentra en estado de Ejecución (Running) bajo Modo Usuario.\n\nGuía de Verificación en Tiempo Real:\n\n1. Abra el Administrador de Tareas (Windows) o ejecute "htop" (Linux).\n\n2. En la pestaña de Procesos, localice la instancia activa de "python.exe" correspondiente a este script.\n\n3. Diríjase a la pestaña de Rendimiento -> CPU.\n\n4. Haga clic derecho sobre el gráfico de CPU y seleccione: "Cambiar gráfico a -> Procesadores lógicos"\n\n5. Observe cómo la carga de trabajo CPU-Bound es ejecutada por un único hilo principal de manera secuencial.\n\n6. Dependiendo del Scheduler del sistema operativo, el hilo puede migrar dinámicamente entre distintos núcleos lógicos,\npor lo que la actividad puede distribuirse visualmente entre varios procesadores.\n\n7. Aun así, el consumo total permanecerá limitado aproximadamente a la capacidad de ejecución de un único thread lógico,\nlo que evidencia la naturaleza secuencial y monohilo de esta implementación.\n\n'
             )
 
-            print('Esperando resultados... Esto puede tardar varios segundos dependiendo de la capacidad de su CPU... Aguarde por favor...\n\n')
+            print(ESPERANDO_RESULTADOS)
 
             tiempo_inicio = time.time()  
 
             resultado = []       # Lista compartida entre threads
             hilos = []   
 
-            # División del problema en partes (paralelización manual)
-            rangos = [          
-            (1, 37500),
-            (37500, 75000),
-            (75000, 112500),
-            (112500, 150000)
-            ]
-
              # Se crea un thread por cada rango
-            for inicio, fin in rangos:     
+            for inicio, fin in RANGOS:     
                 hilo = threading.Thread(
                     target=buscar_primos_thread,
                     args=(inicio, fin, resultado)
@@ -90,23 +71,19 @@ def evidencia_2():
 
             tiempo_total = tiempo_fin - tiempo_inicio
 
-            input(
-                f'¡Cálculo finalizado con éxito!\nCantidad de números primos encontrados: {len(resultado)}\nTiempo total de ejecución: {tiempo_total: .4f} segundos\nPresione ENTER para continuar '
-            )
+            input(get_mensaje_exito(resultado, tiempo_total))
         
         elif menu == 3: #--- MULTI PROCESOS ---
 
             clear_console()
 
-            limite_superior = 150000
-
             print('=== EJECUCIÓN EN VARIOS PROCESOS EN PROGRESO ===\n\n')
 
             print(
-                f'Calculando números primos desde el 1 hasta el {limite_superior}...\n\n\nPROCESAMIENTO EN CURSO, AGUARDE POR FAVOR...\n\n\nEl proceso activo se encuentra en estado de Ejecución (Running) bajo Modo Usuario.\n\nGuía de Verificación en Tiempo Real:\n\n1. Abra el Administrador de Tareas (Windows) o ejecute "htop" (Linux).\n\n2. En la pestaña de Procesos, localice la instancia activa de "python.exe" correspondiente a este script.\n\n3. Diríjase a la pestaña de Rendimiento -> CPU.\n\n4. Haga clic derecho sobre el gráfico de CPU y seleccione: "Cambiar gráfico a -> Procesadores lógicos"\n\n5. Observe cómo la carga de trabajo CPU-Bound es ejecutada por un único hilo principal de manera secuencial.\n\n6. Dependiendo del Scheduler del sistema operativo, el hilo puede migrar dinámicamente entre distintos núcleos lógicos,\npor lo que la actividad puede distribuirse visualmente entre varios procesadores.\n\n7. Aun así, el consumo total permanecerá limitado aproximadamente a la capacidad de ejecución de un único thread lógico,\nlo que evidencia la naturaleza secuencial y monohilo de esta implementación.\n\n'
+                f'Calculando números primos desde el 1 hasta el {LIMITE_SUPERIOR}...\n\n\nPROCESAMIENTO EN CURSO, AGUARDE POR FAVOR...\n\n\nEl proceso activo se encuentra en estado de Ejecución (Running) bajo Modo Usuario.\n\nGuía de Verificación en Tiempo Real:\n\n1. Abra el Administrador de Tareas (Windows) o ejecute "htop" (Linux).\n\n2. En la pestaña de Procesos, localice la instancia activa de "python.exe" correspondiente a este script.\n\n3. Diríjase a la pestaña de Rendimiento -> CPU.\n\n4. Haga clic derecho sobre el gráfico de CPU y seleccione: "Cambiar gráfico a -> Procesadores lógicos"\n\n5. Observe cómo la carga de trabajo CPU-Bound es ejecutada por un único hilo principal de manera secuencial.\n\n6. Dependiendo del Scheduler del sistema operativo, el hilo puede migrar dinámicamente entre distintos núcleos lógicos,\npor lo que la actividad puede distribuirse visualmente entre varios procesadores.\n\n7. Aun así, el consumo total permanecerá limitado aproximadamente a la capacidad de ejecución de un único thread lógico,\nlo que evidencia la naturaleza secuencial y monohilo de esta implementación.\n\n'
             )
 
-            print('Esperando resultados... Esto puede tardar varios segundos dependiendo de la capacidad de su CPU... Aguarde por favor...\n\n')
+            print(ESPERANDO_RESULTADOS)
 
             tiempo_inicio = time.time()
 
@@ -114,15 +91,7 @@ def evidencia_2():
             cola = manager.Queue()    # Cola para comunicación entre procesos (IPC)
             procesos = []
 
-
-            rangos = [
-            (1, 37500),
-            (37500, 75000),
-            (75000, 112500),
-            (112500, 150000)
-            ]
-
-            for inicio, fin in rangos:
+            for inicio, fin in RANGOS:
                 # Se crea un proceso independiente del sistema operativo
                 proceso = multiprocessing.Process(
                     target=buscar_primos_mp,
@@ -151,9 +120,7 @@ def evidencia_2():
             tiempo_fin = time.time()
             tiempo_total = tiempo_fin - tiempo_inicio
 
-            input(
-                f'¡Cálculo finalizado con éxito!\nCantidad de números primos encontrados: {len(resultado)}\nTiempo total de ejecución: {tiempo_total: .4f} segundos\nPresione ENTER para continuar '
-            )
+            input(get_mensaje_exito(resultado, tiempo_total))
 
         elif menu == 4:
             clear_console()
