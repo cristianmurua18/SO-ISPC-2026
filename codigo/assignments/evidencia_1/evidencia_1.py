@@ -2,8 +2,16 @@ from utils.clear_console import clear_console
 
 
 def evidencia_1():
+    """
+    Muestra la documentación y plan de trabajo del proyecto Evidencia 1.
+    
+    La función pausará la ejecución esperando que el usuario presione ENTER
+    para continuar con el programa.
+    """
+    # Limpia la consola para mostrar una pantalla limpia
     clear_console()
 
+    # Muestra el contenido del proyecto y espera confirmación del usuario
     input(
         '1- Opción elegida\n'
         'Opción A — Threads vs Procesos\n'
